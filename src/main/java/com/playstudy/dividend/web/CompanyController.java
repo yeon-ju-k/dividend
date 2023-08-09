@@ -1,12 +1,15 @@
 package com.playstudy.dividend.web;
 
 import com.playstudy.dividend.model.Company;
+import com.playstudy.dividend.model.constants.CacheKey;
 import com.playstudy.dividend.persist.entity.CompanyEntity;
 import com.playstudy.dividend.service.CompanyService;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +33,7 @@ public class CompanyController {
 
     // 회사 리스트 전체 조회 기능 - 전체 회사 list 가 출력
     @GetMapping
+    @PreAuthorize("hasRole('READ')")
     public Page<CompanyEntity> searchCompany(final Pageable pageable) {
         return companyService.getAllCompany(pageable);
     }
@@ -39,6 +43,7 @@ public class CompanyController {
      */
     // 관리자 기능 - 회사 정보 + 배당금 정보 추가
     @PostMapping
+    @PreAuthorize("hasRole('WRITE')")   // 쓰기권한이 있는 유저만 해당 API 를 호출할 수 있게 설정
     public ResponseEntity<Company> addCompany(@RequestBody Company request) {
 
         // 1) ticker 값 가져오기
@@ -60,10 +65,25 @@ public class CompanyController {
 
     // 관리자 기능 - 회사 정보 + 배당금 정보 삭제
     @DeleteMapping("/{ticker}")
-    public void delCompany(@PathVariable String ticker) {
+    @PreAuthorize("hasRole('WRITE')")
+    public ResponseEntity<?> delCompany(@PathVariable String ticker) {
+        // 1) 해당 데이터 삭제
+        String companyName = this.companyService.deleteCompany(ticker);
 
-        // 자동완성 기능 구현을 위한 trie에 회사명 삭제
-        //this.companyService.deleteAutocompleteKeyword(company);
+        // 2) 캐쉬 데이터 삭제
+        this.clearFinanceCache(companyName);
+
+        return ResponseEntity.ok(companyName);
     }
 
+
+    private final CacheManager redisCacheManager;
+
+    // 캐쉬 삭제 기능
+    public void clearFinanceCache(String companyName) {
+        this.redisCacheManager.getCache(CacheKey.KEY_FINANCE).evict(companyName);
+    }
+
+    // 자동완성 기능 구현을 위한 trie에 회사명 삭제
+    //this.companyService.deleteAutocompleteKeyword(company);
 }

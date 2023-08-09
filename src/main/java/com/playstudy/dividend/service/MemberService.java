@@ -1,5 +1,6 @@
 package com.playstudy.dividend.service;
 
+import com.playstudy.dividend.exception.impl.AlreadyExistUserException;
 import com.playstudy.dividend.model.Auth;
 import com.playstudy.dividend.model.MemberEntity;
 import com.playstudy.dividend.repository.MemberRepository;
@@ -30,10 +31,10 @@ public class MemberService implements UserDetailsService {
     public MemberEntity register(Auth.SignUp member) {
 
         // id 중복 여부 확인
-        boolean exists = this.memberRepository.existByUsername(member.getUsername());
+        boolean exists = this.memberRepository.existsByUsername(member.getUsername());
 
         if (exists) {   // 이미 존재하는 id 일 경우 -> 오류
-            throw new RuntimeException("이미 사용 중인 아이디 입니다");
+            throw new AlreadyExistUserException();
         }
 
         // 없는 id 일 경우 -> 회원가입

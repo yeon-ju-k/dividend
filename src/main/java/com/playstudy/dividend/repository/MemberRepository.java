@@ -13,7 +13,7 @@ public interface MemberRepository extends JpaRepository<MemberEntity, Long> {
     Optional<MemberEntity> findByUsername(String username);
 
     // id값 중복 존재유무 (회원가입할 때 id값 중복확인 기능)
-    boolean existByUsername(String username);
+    boolean existsByUsername(String username);
 
 }
 

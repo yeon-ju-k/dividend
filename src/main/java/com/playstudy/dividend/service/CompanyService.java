@@ -1,5 +1,6 @@
 package com.playstudy.dividend.service;
 
+import com.playstudy.dividend.exception.impl.NoCompanyException;
 import com.playstudy.dividend.model.Company;
 import com.playstudy.dividend.model.Dividend;
 import com.playstudy.dividend.model.ScrapedResult;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -123,7 +125,18 @@ public class CompanyService {
     // 8. 회사 + 배당금 정보 삭제 -> 리턴값 회사명
     public String deleteCompany(String ticker) {
 
-        return null;
+        // 1) ticker 명으로 회사데이터 찾기
+        CompanyEntity company = this.companyRepository.findByTicker(ticker)
+                .orElseThrow( () -> new NoCompanyException());
+
+        // 2) 찾은 데이터 삭제하기 (company + dividend 정보 모두 삭제)
+        this.dividendRepository.deleteAllByCompanyId(company.getId());
+        this.companyRepository.delete(company);
+
+        // 3) 자동완성기능을 위한 trie에서도 회사정보 삭제
+        this.deleteAutocompleteKeyword(company.getName());
+
+        return company.getName();
     }
 
 

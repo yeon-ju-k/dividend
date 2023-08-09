@@ -26,7 +26,6 @@ public class AuthController {
 
         // 회원 가입을 위한 API
         MemberEntity result = this.memberService.register(request);
-
         return ResponseEntity.ok(result);
     }
 

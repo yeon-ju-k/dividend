@@ -1,5 +1,6 @@
 package com.playstudy.dividend.security;
 
+import com.playstudy.dividend.service.MemberService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -7,9 +8,13 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.boot.model.source.spi.SingularAttributeNature;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.lang.reflect.Member;
 import java.util.Date;
 import java.util.List;
 
@@ -21,6 +26,9 @@ public class TokenProvider {
     private static final String KEY_ROLES = "roles";
     private static final long TOKEN_EXPIRE_TIME = 1000 * 60 * 60;   // = 1시간 (1000ms 에 초,분을 곱해서)
 
+
+    // 토큰 인증정보 추출
+    private final MemberService memberService;
 
     @Value("{spring.jwt.secret}")   // application.properties 에 설정한 비밀키값 가져오기
     private String secretKey;
@@ -83,6 +91,15 @@ public class TokenProvider {
         } catch (ExpiredJwtException e) {
             return e.getClaims();
         }
+    }
+
+    // 토큰으로부터 인증 정보를 가져오는 기능
+    public Authentication getAuthentication(String jwt) {
+        // 토큰에서 username을 가져와서 -> 해당 데이터 찾기 
+        UserDetails userDetails = this.memberService.loadUserByUsername(this.getUsername(jwt));
+
+        // username , 비밀번호, 권한정보 순의 토큰 정보
+        return new UsernamePasswordAuthenticationToken(userDetails,"", userDetails.getAuthorities());
     }
 
 

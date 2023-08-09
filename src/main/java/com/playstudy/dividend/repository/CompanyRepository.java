@@ -23,6 +23,8 @@ public interface CompanyRepository extends JpaRepository<CompanyEntity, Long> {
     // Like 자동완성 기능 - 회사으로 조회
     Page<CompanyEntity> findByNameStartingWithIgnoreCase(String s, Pageable limit);
 
+    // ticker 명으로 회사 데이터 조회
+    Optional<CompanyEntity> findByTicker(String ticker);
 
 }
 

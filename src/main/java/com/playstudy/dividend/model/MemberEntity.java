@@ -5,10 +5,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +27,9 @@ public class MemberEntity implements UserDetails {  // spring boot security 라�
     private String password;
 
     // List 로 설정하는 이유? ) READWRITE : Read 와 Write 두개의 권한을 가질 수도 있기 때문
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "member_roles", joinColumns = @JoinColumn(name = "member_id"))
+    @Column(name = "role")
     private List<String> roles;
 
 
